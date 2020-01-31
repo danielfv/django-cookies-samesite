@@ -28,23 +28,6 @@ class CookiesSameSite(MiddlewareMixin):
     This middleware will be obsolete when your app will start using Django 2.1.
     """
     def process_response(self, request, response):
-        if LooseVersion(django.__version__) >= LooseVersion('2.1.0'):
-            raise DeprecationWarning(
-                'Your version of Django supports SameSite flag in the cookies mechanism. '
-                'You should remove django-cookies-samesite from your project.'
-            )
-
-        protected_cookies = getattr(
-            settings,
-            'SESSION_COOKIE_SAMESITE_KEYS',
-            set()
-        ) or set()
-
-        if not isinstance(protected_cookies, (list, set, tuple)):
-            raise ValueError('SESSION_COOKIE_SAMESITE_KEYS should be a list, set or tuple.')
-
-        protected_cookies = set(protected_cookies)
-        protected_cookies |= {settings.SESSION_COOKIE_NAME, settings.CSRF_COOKIE_NAME}
 
         samesite_flag = getattr(
             settings,
@@ -58,9 +41,8 @@ class CookiesSameSite(MiddlewareMixin):
         if samesite_flag.lower() not in {'lax', 'none', 'strict'}:
             raise ValueError('samesite must be "lax", "none", or "strict".')
 
-        #for cookie in protected_cookies:
         for name, cookie in response.cookies.items():
-            try:  
+            try:
                 response.cookies[name]['samesite'] = samesite_flag.lower()
                 response.cookies[name]['secure'] = True
             except:
